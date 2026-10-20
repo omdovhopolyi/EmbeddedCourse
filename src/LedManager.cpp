@@ -1,8 +1,11 @@
 #include <LedManager.hpp>
+#include <Controller/LedController.hpp>
 
-LedManager::LedManager(int delay)
-    : _delay(delay)
-{}
+void LedManager::SetController(std::unique_ptr<LedController> controller)
+{
+    _controller = std::move(controller);
+    _controller->Init(this);
+}
 
 void LedManager::AddLed(int pinIndex)
 {
@@ -15,21 +18,19 @@ void LedManager::Setup()
         return;
     }
     ConfigurePins();
-    _currentLedIndex = 0;
-    ToggleCurrentLed();
 }
 
-void LedManager::Update()
+void LedManager::Update(unsigned long dt)
 {
-    delay(_delay);
-
-    if (_leds.empty()) {
+    if (!_controller) {
         return;
     }
+    _controller->Update(dt);
+}
 
-    ToggleCurrentLed();
-    IncLedIndex();
-    ToggleCurrentLed();
+std::vector<LedState>& LedManager::GetLeds()
+{
+    return _leds;
 }
 
 LedState* LedManager::GetLed(int index)
@@ -40,9 +41,9 @@ LedState* LedManager::GetLed(int index)
     return nullptr;
 }
 
-LedState* LedManager::GetCurrentLed()
+int LedManager::GetLedsAmount() const
 {
-    return GetLed(_currentLedIndex);
+    return static_cast<int>(_leds.size());
 }
 
 void LedManager::ConfigurePins()
@@ -50,19 +51,4 @@ void LedManager::ConfigurePins()
     for (auto& led : _leds) {
         led.ConfigurePin();
     }
-}
-
-void LedManager::ToggleCurrentLed()
-{
-    auto currentLed = GetCurrentLed();
-    if (!currentLed) {
-        return;
-    }
-    currentLed->Toggle();
-}
-
-void LedManager::IncLedIndex()
-{
-    _currentLedIndex++;
-    _currentLedIndex %= static_cast<int>(_leds.size());
 }

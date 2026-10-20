@@ -1,26 +1,31 @@
-#include <Arduino.h>
+#ifndef LED_MANAGER
+#define LED_MANAGER
+
 #include <LedState.hpp>
 #include <vector>
+#include <memory>
+
+class LedController;
 
 class LedManager
 {
 public:
-    LedManager(int delay = 1000);
+    void SetController(std::unique_ptr<LedController> controller);
 
     void AddLed(int pinIndex);
     void Setup();
-    void Update();
+    void Update(unsigned long dt);
 
+    std::vector<LedState>& GetLeds();
     LedState* GetLed(int index);
-    LedState* GetCurrentLed();
+    int GetLedsAmount() const;
 
 private:
     void ConfigurePins();
-    void ToggleCurrentLed();
-    void IncLedIndex();
 
 private:
-    int _delay = -1;
-    int _currentLedIndex = -1;
+    std::unique_ptr<LedController> _controller;
     std::vector<LedState> _leds;     
 };
+
+#endif

@@ -14,3 +14,9 @@ void LedState::Toggle()
     _state = (_state == LOW ? HIGH : LOW);
     digitalWrite(_index, _state);
 }
+
+void LedState::SetState(int state)
+{
+    _state = state;
+    digitalWrite(_index, _state);
+}
