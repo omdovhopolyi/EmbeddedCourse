@@ -12,8 +12,8 @@ u16_t readings[N] = {};
 u16_t idx = 0;
 u32_t sum = 0;
 
-float refMillivolts = 3100.f;
-u16_t adcMax = 4095;
+const float refMillivolts = 3100.f;
+const u16_t adcMax = 4095;
 
 u16_t movingAvg(u16_t rawData) {
     sum -= readings[idx];
