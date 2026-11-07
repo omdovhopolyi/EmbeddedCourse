@@ -82,6 +82,7 @@ void loop() {
     static int stableButtonState = HIGH;
 
     static int timeLogCounter = 0;
+    static unsigned long lastTimestamp = 0L;
 
     // захищаємо читання та скидання прапорця.
     // До цієї ділянки переривання ввімкнені.
@@ -91,7 +92,6 @@ void loop() {
     interrupts();
 
     const unsigned long now = millis();
-    const unsigned long microSecNow = micros();
 
     // Отримали подію — читаємо кнопку й починаємо
     // відлік часу для підтвердження її стану.
@@ -145,11 +145,12 @@ void loop() {
 
     if (timeLogCounter <= 0) {
       timeLogCounter = Config::TimeLogDelayIterations;
-      const int timeElapsed = micros() - microSecNow;
+      const int timeElapsed = micros() - lastTimestamp;
       Serial.print("Time elapsed: ");
       Serial.print(timeElapsed);
       Serial.println(" microseconds");
     }
 
+    lastTimestamp = micros();
     timeLogCounter--;
 }
