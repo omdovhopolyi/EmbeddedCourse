@@ -12,7 +12,7 @@ struct Config {
   static constexpr u8_t avgValuesCount = 10;
 };
 
-u32_t lastTimeChange = 0;
+volatile u32_t lastTimeChange = 0;
 u32_t lastTimeUpdate = 0;
 bool debouncing = false;
 u32_t relaySignalSentTimestamp = 0;
