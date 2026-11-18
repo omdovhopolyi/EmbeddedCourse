@@ -20,7 +20,7 @@ u32_t relaySignalReceivedTimestamp = 0;
 u32_t values[Config::avgValuesCount];
 u8_t avgIndex = 0;
 bool avgInited = false;
-int sum = 0;
+u32_t sum = 0;
 
 void initAvg(u16_t value) {
   for (u8_t i = 0; i < Config::avgValuesCount; i++) {
@@ -65,8 +65,11 @@ void loop() {
     }
     else if (adcValue < Config::thresholdDark) {
       //Serial.println("OFF");
+      const bool isChanging = (digitalRead(Config::outPin) == LOW);
+      if (isChanging) {
+        relaySignalSentTimestamp = micros();
+      }
       digitalWrite(Config::outPin, HIGH);
-      relaySignalSentTimestamp = micros();
     }
   }
 
