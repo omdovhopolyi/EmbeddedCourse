@@ -1,4 +1,5 @@
 #include <Arduino.h>
+#include "Led.h"
 
 struct Config {
     static constexpr uint8_t ButtonPin = 0;
@@ -11,10 +12,7 @@ struct Config {
     static constexpr unsigned int TimeLogDelayIterations = 100000;
 };
 
-enum class LedState {
-    Off,
-    On
-};
+Led led;
 
 enum class LedControllerType : uint8_t {
   Off,
@@ -48,8 +46,7 @@ void setLed(LedState state) {
 void setup() {
     Serial.begin(Config::SerialBaud);
 
-    pinMode(Config::LedPin, OUTPUT);
-    setLed(LedState::Off);
+    led.Init(Config::LedPin);
 
     pinMode(Config::ButtonPin, INPUT_PULLUP);
 
@@ -60,9 +57,6 @@ void setup() {
 }
 
 void loop() {
-    // Поточний стан світлодіода: увімкнений (On) або вимкнений (Off).
-    static LedState ledState = LedState::Off;
-
     static LedControllerType ledControllerType = LedControllerType::Off;
 
     // Час останнього ввімкнення LED або перезапуску його таймера.
@@ -114,17 +108,15 @@ void loop() {
 
     switch (ledControllerType) {
       case LedControllerType::Off: {
-        if (ledState != LedState::Off) {
-          ledState = LedState::Off;
-          setLed(LedState::Off);
+        const bool isChanged = led.SetState(LedState::Off);
+        if (isChanged) {
           Serial.println("Button pressed: LED OFF");
         }
         break;
       }
       case LedControllerType::On: {
-        if (ledState != LedState::On) {
-          ledState = LedState::On;
-          setLed(LedState::On);
+        const bool isChanged = led.SetState(LedState::On);
+        if (isChanged) {
           Serial.println("Button pressed: LED ON");
         }
         break;
@@ -132,8 +124,7 @@ void loop() {
       case LedControllerType::Blink: {
         if (now - ledStartedAt >= Config::LedBlinkMs) {
           ledStartedAt = now;
-          ledState = (ledState == LedState::On ? LedState::Off : LedState::On);
-          setLed(ledState);
+          led.Toggle();
           Serial.println("Button pressed: LED BLINK");
         }
         break;
