@@ -65,10 +65,14 @@ void loop() {
     if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
       lastTimestamp = 0L;
       const auto pinState = digitalRead(Config::ButtonPin);
-      if (pinState == LOW) {
+      if (pinState == LOW && !buttonPressed) {
+        buttonPressed = true;
         counter++;
         Serial.print("Time based. Count: ");
         Serial.println(counter);
+      }
+      else {
+        buttonPressed = false;
       }
     }
   }
