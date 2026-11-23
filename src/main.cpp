@@ -18,7 +18,9 @@ enum class DebounceType {
 DebounceType type = DebounceType::Polling;
 int counter = 0;
 unsigned long lastTimestamp = 0L;
+unsigned long pollTimestamp = 0L;
 bool buttonPressed = false;
+bool lastButtonState = false;
 
 void OnButtonPressed() {
   interruptCaught = true;
@@ -33,6 +35,8 @@ void setup() {
 }
 
 void loop() {
+  const auto now = millis();
+
   if (type == DebounceType::None) {
     if (interruptCaught) {
       interruptCaught = false;
@@ -42,45 +46,49 @@ void loop() {
     }
   }
   else if (type == DebounceType::TimeBased) {
-    if (interruptCaught) {
+    if (lastTimestamp > 0L && interruptCaught) {
       interruptCaught = false;
-      lastTimestamp = millis();
+      lastTimestamp = now;
     }
-    const auto now = millis();
-      if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
-        lastTimestamp = 0L;
-        counter++;
-        Serial.print("Time based. Count: ");
-        Serial.println(counter);
-      }
+    if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
+      lastTimestamp = 0L;
+      counter++;
+      Serial.print("Time based. Count: ");
+      Serial.println(counter);
+    }
   }
   else if (type == DebounceType::StateBased) {
     if (interruptCaught) {
       interruptCaught = false;
-      lastTimestamp = millis();
+      lastTimestamp = now;
     }
-    const auto now = millis();
-      if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
-        lastTimestamp = 0L;
-        const auto pinState = digitalRead(Config::ButtonPin);
-        if (pinState == LOW) {
-          counter++;
-          Serial.print("Time based. Count: ");
-          Serial.println(counter);
-        }
+    if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
+      lastTimestamp = 0L;
+      const auto pinState = digitalRead(Config::ButtonPin);
+      if (pinState == LOW) {
+        counter++;
+        Serial.print("Time based. Count: ");
+        Serial.println(counter);
       }
+    }
   }
   else if (type == DebounceType::Polling) {
-    const auto now = millis();
-    if (now - lastTimestamp >= Config::PollPeriod) {
-      lastTimestamp = millis();
+    if (now - pollTimestamp >= Config::PollPeriod) {
+      pollTimestamp = now;
       const bool pinState = (digitalRead(Config::ButtonPin) == LOW);
-      if (buttonPressed != pinState) {
-        buttonPressed = pinState;
-        if (buttonPressed) {
-          counter++;
-          Serial.print("Polling. Count: ");
-          Serial.println(counter);
+      if (pinState != lastButtonState) {
+        lastTimestamp = now;
+        lastButtonState = pinState;
+      }
+      if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
+        lastTimestamp = 0L;
+        if (pinState != buttonPressed) {
+          buttonPressed = pinState;
+          if (buttonPressed) {
+            counter++;
+            Serial.print("Polling. Count: ");
+            Serial.println(counter);
+          }
         }
       }
     }
