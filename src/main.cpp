@@ -21,6 +21,7 @@ unsigned long lastTimestamp = 0L;
 unsigned long pollTimestamp = 0L;
 bool buttonPressed = false;
 bool lastButtonState = false;
+bool isDebouncing = false;
 
 void OnButtonPressed() {
   interruptCaught = true;
@@ -46,11 +47,13 @@ void loop() {
     }
   }
   else if (type == DebounceType::TimeBased) {
-    if (lastTimestamp > 0L && interruptCaught) {
+    if (!isDebouncing && interruptCaught) {
       interruptCaught = false;
+      isDebouncing = true;
       lastTimestamp = now;
     }
-    if (lastTimestamp > 0L && now - lastTimestamp >= Config::DebounceTime) {
+    if (isDebouncing && now - lastTimestamp >= Config::DebounceTime) {
+      isDebouncing = false;
       lastTimestamp = 0L;
       counter++;
       Serial.print("Time based. Count: ");
@@ -71,7 +74,7 @@ void loop() {
         Serial.print("Time based. Count: ");
         Serial.println(counter);
       }
-      else {
+      else if (pinState == HIGH) {
         buttonPressed = false;
       }
     }
